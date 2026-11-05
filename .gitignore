@@ -1,0 +1,13 @@
+# Local environment and generated files
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Local data and secrets
+*.db
+*.db-*
+*.sqlite*
+backups/
+.env
+.env.*

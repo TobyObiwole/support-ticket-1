@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <main class="ticket-card desk-card">
+        <header class="page-header staff-header">
+            <div>
+                <p class="eyebrow">Staff workspace</p>
+                <h1>Support desk</h1>
+                <p class="text-body-secondary mb-0">Search tickets and open a reference to view the problem.</p>
+            </div>
+            <div class="staff-account">
+                {% if session.get('staff_username') %}
+                <p class="staff-name">Signed in as <strong>{{ session['staff_username'] }}</strong></p>
+                {% endif %}
+                <details class="staff-menu">
+                    <summary>Account</summary>
+                    <form class="logout-form" action="{{ url_for('staff_logout') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+                        <p class="mb-3">Log out of the support desk?</p>
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Log out</button>
+                    </form>
+                </details>
+            </div>
+        </header>
+
+        <form class="desk-filters" action="/desk" method="get">
+            <div>
+                <label class="form-label" for="search">Search tickets</label>
+                <input class="form-control" type="search" id="search" name="q" value="{{ search }}"
+                       maxlength="100" placeholder="Reference, name, email or problem">
+            </div>
+            <div>
+                <label class="form-label" for="sort">Sort by</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest first</option>
+                    <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+                    <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+                    <option value="status" {% if sort == 'status' %}selected{% endif %}>Status</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a href="/desk">Reset</a>
+            </div>
+        </form>
+
+        {% if tickets %}
+        <p class="small text-body-secondary mb-0">Showing {{ first_result }}–{{ last_result }} of {{ total }} {{ 'ticket' if total == 1 else 'tickets' }}.</p>
+        <div class="table-scroll" role="region" aria-label="Saved tickets" tabindex="0">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Created (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td><a class="fw-semibold" href="{{ url_for('manage_ticket', ticket_id=ticket['id'], q=search, sort=sort, page=page) }}">ST-{{ ticket['id'] }}</a></td>
+                        <td>{{ ticket['name'] }}</td>
+                        <td>{{ ticket['email'] or 'Not provided' }}</td>
+                        <td><span class="status-badge status-{{ ticket['status']|lower|replace(' ', '-') }}">{{ ticket['status'] }}</span></td>
+                        <td class="small text-body-secondary">{{ ticket['created_at'] | readable_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif search %}
+        <p class="empty-state">No tickets match “{{ search }}”. Try a different search or reset the filters.</p>
+        {% else %}
+        <p class="empty-state">No tickets have been submitted.</p>
+        {% endif %}
+
+        <nav class="pagination" aria-label="Ticket pages">
+            <p class="small text-body-secondary mb-0">Page {{ page }} of {{ total_pages }}</p>
+            <div class="pagination-links">
+                {% if page > 1 %}
+                <a href="{{ url_for('support_desk', q=search, sort=sort, page=page - 1) }}">Previous</a>
+                {% else %}
+                <span class="disabled" aria-disabled="true">Previous</span>
+                {% endif %}
+                {% if page < total_pages %}
+                <a href="{{ url_for('support_desk', q=search, sort=sort, page=page + 1) }}">Next</a>
+                {% else %}
+                <span class="disabled" aria-disabled="true">Next</span>
+                {% endif %}
+            </div>
+        </nav>
+
+    </main>
+</body>
+</html>

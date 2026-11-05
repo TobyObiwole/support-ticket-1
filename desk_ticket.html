@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST-{{ ticket['id'] }} | Support desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <main class="ticket-card desk-card">
+        <nav class="back-link" aria-label="Support desk navigation">
+            <a href="{{ url_for('support_desk', q=search, sort=sort, page=page) }}">&larr; Back to support desk</a>
+        </nav>
+        <header class="page-header staff-header">
+            <div>
+                <h1>Ticket ST-{{ ticket['id'] }}</h1>
+                <p class="text-body-secondary mb-0">Review the problem and update its progress.</p>
+            </div>
+            <div class="staff-account">
+                {% if session.get('staff_username') %}
+                <p class="staff-name">Signed in as <strong>{{ session['staff_username'] }}</strong></p>
+                {% endif %}
+                <details class="staff-menu">
+                    <summary>Account</summary>
+                    <form class="logout-form" action="{{ url_for('staff_logout') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+                        <p class="mb-3">Log out of the support desk?</p>
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Log out</button>
+                    </form>
+                </details>
+            </div>
+        </header>
+
+        {% if saved %}
+        <p class="alert alert-success" role="status">Status saved.</p>
+        {% endif %}
+        {% if error %}
+        <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <div class="ticket-layout">
+            <aside class="ticket-summary" aria-label="Ticket information">
+                <h2>Ticket information</h2>
+                <dl class="ticket-info">
+                    <dt>Current status</dt>
+                    <dd><span class="status-badge status-{{ ticket['status']|lower|replace(' ', '-') }}">{{ ticket['status'] }}</span></dd>
+                    <dt>Name</dt>
+                    <dd>{{ ticket['name'] }}</dd>
+                    <dt>Email</dt>
+                    <dd>{{ ticket['email'] or 'Not provided' }}</dd>
+                    <dt>Created (UTC)</dt>
+                    <dd>{{ ticket['created_at'] | readable_date }}</dd>
+                </dl>
+                <form class="status-form" action="{{ url_for('manage_ticket', ticket_id=ticket['id'], q=search, sort=sort, page=page) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+                    <label class="form-label" for="status">Update status</label>
+                    <select class="form-select mb-3" id="status" name="status" required>
+                        {% for status in status_options %}
+                        <option value="{{ status }}" {% if status == ticket['status'] %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary w-100" type="submit">Save status</button>
+                </form>
+            </aside>
+
+            <div>
+                <section class="problem-panel">
+                    <h2>Problem description</h2>
+                    <p class="problem-text mb-0">{{ ticket['problem'] }}</p>
+                </section>
+                {% if image_attached %}
+                <section class="mt-4" aria-label="Attached image">
+                    <h2>Attached image</h2>
+                    <a href="{{ url_for('ticket_image', ticket_id=ticket['id']) }}" target="_blank" rel="noopener">
+                        <img class="ticket-image" src="{{ url_for('ticket_image', ticket_id=ticket['id']) }}" alt="Image attached to ticket ST-{{ ticket['id'] }}">
+                        Open image <span aria-hidden="true">&nearr;</span>
+                    </a>
+                </section>
+                {% endif %}
+                {% if email_link %}
+                <section class="reply-panel">
+                    <h2>Reply to the customer</h2>
+                    <p class="field-help mb-3">Opens your email app with the ticket reference. Email replies stay in your inbox.</p>
+                    <a class="btn btn-outline-secondary" href="{{ email_link }}">Email customer <span aria-hidden="true">&nearr;</span></a>
+                </section>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

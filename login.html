@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff login | Support desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <main class="ticket-card login-card">
+        <header class="page-header">
+            <p class="eyebrow">Support desk</p>
+            <h1>Staff login</h1>
+            <p class="text-body-secondary mb-0">Sign in to access the support desk.</p>
+        </header>
+
+        {% if error %}
+        <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form action="{{ url_for('staff_login') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+            <div class="mb-4">
+                <label class="form-label" for="username">Username</label>
+                <input class="form-control" type="text" id="username" name="username" value="{{ username }}"
+                       autocomplete="username" maxlength="80" placeholder="Enter your username" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" type="password" id="password" name="password"
+                       autocomplete="current-password" maxlength="128" placeholder="Enter your password" required>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Sign in</button>
+        </form>
+    </main>
+</body>
+</html>
