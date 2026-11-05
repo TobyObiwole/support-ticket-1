@@ -310,8 +310,12 @@ def ticket_image(ticket_id):
     attachment = query("SELECT * FROM ticket_images WHERE ticket_id = ?", (ticket_id,), one=True)
     if attachment is None:
         abort(404)
+    extension = "png" if attachment["content_type"] == "image/png" else "jpg"
     return Response(attachment["image"], mimetype=attachment["content_type"],
-                    headers={"X-Content-Type-Options": "nosniff"})
+                    headers={
+                        "Content-Disposition": f'inline; filename="ticket-{ticket_id}.{extension}"',
+                        "X-Content-Type-Options": "nosniff",
+                    })
 
 
 @app.route("/desk/tickets/<int:ticket_id>", methods=["GET", "POST"])
