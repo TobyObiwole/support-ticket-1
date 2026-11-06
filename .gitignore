@@ -11,3 +11,4 @@ __pycache__/
 backups/
 .env
 .env.*
+STAFF_LOGIN.txt
