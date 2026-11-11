@@ -1,3 +1,4 @@
+import os
 import secrets
 import sqlite3
 from contextlib import closing
@@ -23,7 +24,7 @@ app.config.update(
 )
 # Restarting the app signs out existing sessions.
 app.secret_key = secrets.token_hex(32)
-DATABASE = Path(__file__).with_name("tickets.db")
+DATABASE = Path(os.environ.get("SUPPORT_TICKET_DB", Path(__file__).with_name("tickets.db")))
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 STATUS_OPTIONS = ("Open", "In progress", "Resolved")
 PAGE_SIZE = 10
@@ -50,31 +51,37 @@ def query(sql, values=(), one=False):
         return rows
 
 
-query("""
-    CREATE TABLE IF NOT EXISTS tickets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL DEFAULT '',
-        problem TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Open',
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        access_token TEXT NOT NULL UNIQUE
-    )
-""")
-query("""
-    CREATE TABLE IF NOT EXISTS staff (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL
-    )
-""")
-query("""
-    CREATE TABLE IF NOT EXISTS ticket_images (
-        ticket_id INTEGER PRIMARY KEY REFERENCES tickets(id),
-        image BLOB NOT NULL,
-        content_type TEXT NOT NULL
-    )
-""")
+def initialize_database():
+    """Create missing tables in the selected database without replacing saved data."""
+    DATABASE.parent.mkdir(parents=True, exist_ok=True)
+    query("""
+        CREATE TABLE IF NOT EXISTS tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL DEFAULT '',
+            problem TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'Open',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            access_token TEXT NOT NULL UNIQUE
+        )
+    """)
+    query("""
+        CREATE TABLE IF NOT EXISTS staff (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL
+        )
+    """)
+    query("""
+        CREATE TABLE IF NOT EXISTS ticket_images (
+            ticket_id INTEGER PRIMARY KEY REFERENCES tickets(id),
+            image BLOB NOT NULL,
+            content_type TEXT NOT NULL
+        )
+    """)
+
+
+initialize_database()
 
 
 @app.cli.command("create-staff")

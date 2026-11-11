@@ -36,3 +36,5 @@ The app creates `tickets.db` automatically. It stores tickets, image attachments
 The form accepts one JPG or PNG up to 5 MB and 20 megapixels. Dates are displayed in UTC. Replies happen in the email application; the support app does not send or receive email itself.
 
 Bootstrap is distributed under the MIT license; see `static/bootstrap.LICENSE.txt`.
+
+For synthetic rehearsal data, automated checks, a five-minute presentation and code questions, see [DEMO_GUIDE.md](DEMO_GUIDE.md). Set `SUPPORT_TICKET_DB` before starting Python to use a separate database path; the default remains `tickets.db` beside `app.py`.
